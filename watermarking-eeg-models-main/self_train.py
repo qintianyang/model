@@ -357,25 +357,25 @@ class ClassifierTrainer:
                 
 
         # # 验证阶段
-        # val_loss = 0.0
-        # total = 0
-        # correct = 0
-        # self.model.eval()
-        # with torch.no_grad():
-        #     for batch_idx, (data, target) in enumerate(val_loader, start=1):
-        #         data, target = data.to(self.device), target.to(self.device)
-        #         out, trigger_features  = self.model(data)
-        #         loss_cls = cls_criterion(out, target)
-        #         val_loss += loss_cls.item()
-        #         _, predicted = torch.max(out, 1)  # 获取预测类别
-        #         total += target.size(0)  # 更新总样本数
-        #         correct += (predicted == target).sum().item()  # 更新正确预测的样本数
-        #     # 计算平均验证损失
-        #     val_loss /= len(val_loader.dataset)
-        #     # 计算准确率
-        #     val_accuracy = 100.0 * correct / total
+        val_loss = 0.0
+        total = 0
+        correct = 0
+        self.model.eval()
+        with torch.no_grad():
+            for batch_idx, (data, target) in enumerate(val_loader, start=1):
+                data, target = data.to(self.device), target.to(self.device)
+                out, trigger_features  = self.model(data)
+                loss_cls = cls_criterion(out, target)
+                val_loss += loss_cls.item()
+                _, predicted = torch.max(out, 1)  # 获取预测类别
+                total += target.size(0)  # 更新总样本数
+                correct += (predicted == target).sum().item()  # 更新正确预测的样本数
+            # 计算平均验证损失
+            val_loss /= len(val_loader.dataset)
+            # 计算准确率
+            val_accuracy = 100.0 * correct / total
 
-        # print(f"Validation: val_loss={val_loss:.4f}, val_acc={val_accuracy:.4f}")
+        print(f"Validation: val_loss={val_loss:.4f}, val_acc={val_accuracy:.4f}")
 
         # loss = self.graphs.reg_loss.cpu().detach().numpy()
         # 绘制图表
