@@ -164,11 +164,6 @@ class ClassifierTrainer:
                     # 水印损失
                     loss_collapse = collapse_criterion(trigger_features, class_means, target)
                     loss = loss_cls + 0.1 *loss_collapse  # 权重可调
-                    # L2 正则化（更高效的计算方式）
-                    # l2_reg = torch.tensor(0.0).to(self.device)
-                    # for param in self.model.parameters():
-                    #     l2_reg += torch.sum(param ** 2)
-                    # num_params = sum(p.numel() for p in self.model.parameters())  # 移到循环外
                     total_loss = loss 
                     # 反向传播
                     total_loss.backward()
@@ -373,9 +368,9 @@ class ClassifierTrainer:
             # 计算平均验证损失
             val_loss /= len(val_loader.dataset)
             # 计算准确率
-            val_accuracy = 100.0 * correct / total
+            finall_val_accuracy = 100.0 * correct / total
 
-        print(f"Validation: val_loss={val_loss:.4f}, val_acc={val_accuracy:.4f}")
+        print(f"Validation: val_loss={val_loss:.4f}, val_acc={finall_val_accuracy:.4f}")
 
         # loss = self.graphs.reg_loss.cpu().detach().numpy()
         # 绘制图表
@@ -440,7 +435,7 @@ class ClassifierTrainer:
         plt.savefig(save_path_8)
 
         plt.show()
-        return self.graphs
+        return self.graphs,finall_val_accuracy
 
     def test(self,trig_dataloader):
         self.model.eval()

@@ -1,26 +1,27 @@
-import config_CCNN
-
-args = config_CCNN.get_config()
-
 import os
 import random
 import logging
-from utils import set_seed
-from rich.tree import Tree
-from dataset import get_dataset
-from results import _get_result_stats, print_to_console
 from torcheeg.model_selection import KFold, train_test_split
 import math
 import json
 from torch import nn
 from pathlib import Path
 from torch.utils.data import DataLoader
-from triggerset import TriggerSet, Verifier
-from self_train import ClassifierTrainer
-from models import get_model, load_model, get_ckpt_file
 import torch
 import pandas as pd
 from self_train  import graphs
+import numpy as np
+
+from triggerset import TriggerSet, Verifier
+from self_train import ClassifierTrainer
+from models import get_model, load_model, get_ckpt_file
+from utils import set_seed
+from rich.tree import Tree
+from dataset import get_dataset
+from results import _get_result_stats, print_to_console
+import config_CCNN
+
+args = config_CCNN.get_config()
 
 seed = args["seed"]
 verbose = args["verbose"]
@@ -143,6 +144,7 @@ def train():
     )
     print(f"Results path: {results_path}")
 
+    val_acc_list = []
     # train 和 test 有三个标签 分别是 数据 任务标签 身份标签
     for i, (train_dataset, test_dataset) in enumerate(cv.split(dataset)):
         fold = f"fold-{i}"
@@ -189,6 +191,7 @@ def train():
             return results
 
         if experiment == "pretrain":
+            
             # 预训练模型
             load_path = f'{save_path}/fold-{i}'
             model = load_model(model, get_ckpt_file(load_path))
@@ -224,14 +227,17 @@ def train():
             pre_loader = DataLoader(test_dataset_new, shuffle=True, batch_size=batch_size)
             train_loader = DataLoader(trig_set, shuffle=True, batch_size=batch_size)
 
-
-            result_graphs = trainer.fit(
+            # 在本次epoch之前的准确率
+            results[fold] = evaluate()
+    
+            result_graphs, val_acc = trainer.fit(
                 train_loader,
                 val_loader,
                 pre_loader,
                 epochs,
                 save_path  = result_model_path
             )
+            val_acc_list.append(val_acc)
 
             from models import load_model_v1
             load_model_path = get_ckpt_file(result_model_path)
@@ -245,5 +251,10 @@ def train():
             with open(results_path, "w") as f:
                 json.dump(experiment_details, f)
         
+        if val_acc_list != []:
+            mean = np.mean(val_acc_list)
+            std = np.std(val_acc_list)
+
+            print(f"平均准确率: {mean:.4f} ± {std:.4f}")
 if __name__ == "__main__":
     train()
