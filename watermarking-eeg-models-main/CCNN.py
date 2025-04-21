@@ -207,7 +207,6 @@ def train():
                 tri_path,
                 architecture,
                 data_type= "id"
-                
             )
             # 三个输出变成两个输出
             from triggerset import ModifiedDataset
@@ -229,7 +228,7 @@ def train():
 
             # 在本次epoch之前的准确率
             results[fold] = evaluate()
-    
+
             result_graphs, val_acc = trainer.fit(
                 train_loader,
                 val_loader,
