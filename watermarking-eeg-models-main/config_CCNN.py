@@ -37,7 +37,7 @@ def get_config():
     config_group.add_argument(
         "--experiment",
         # required=True,
-        default= "pretrain" ,
+        default= "from_scratch" ,
         # choices=ALLOWED_EXPERIMENTS,
         help="Choose one experiment from the above experiments.",
     )

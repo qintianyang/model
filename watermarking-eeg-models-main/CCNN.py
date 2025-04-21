@@ -250,10 +250,66 @@ def train():
             with open(results_path, "w") as f:
                 json.dump(experiment_details, f)
         
+        if experiment == "from_scratch":
+            # 训练模型
+            trainer = ClassifierTrainer(
+            model=model,
+            optimizer=optimizer, 
+            device=device, 
+            scheduler=scheduler
+        )
+            # 触发集
+            trig_set = TriggerSet(
+                tri_path,
+                architecture,
+                data_type= "id"
+            )
+            # 三个输出变成两个输出
+            from triggerset import ModifiedDataset
+            test_dataset_new = ModifiedDataset(train_dataset)
+            train_dataset_new = ModifiedDataset(train_dataset)
+
+            from torch.utils.data import Dataset, ConcatDataset
+            train_dataset_new = ConcatDataset([train_dataset_new, trig_set])
+
+            from torch.utils.data import DataLoader
+            '''
+            训练策略：
+            训练数据为正常的训练数据和触发集的结合，验证数据为触发及
+            但是每5个epoch的时候训练集改为整体的数据
+            '''
+            val_loader = DataLoader(trig_set, shuffle=True, batch_size=batch_size)
+            pre_loader = DataLoader(train_dataset_new, shuffle=True, batch_size=batch_size)
+            train_loader = DataLoader(train_dataset_new, shuffle=True, batch_size=batch_size)
+
+            # 在本次epoch之前的准确率
+            results[fold] = evaluate()
+
+            result_graphs, val_acc = trainer.fit(
+                train_loader,
+                val_loader,
+                pre_loader,
+                epochs,
+                save_path  = result_model_path
+            )
+            val_acc_list.append(val_acc)
+
+            from models import load_model_v1
+            load_model_path = get_ckpt_file(result_model_path)
+            model = load_model_v1(model, load_model_path)
+            model.eval()
+            results[fold] = evaluate()
+            
+            excel_path = os.path.join(model_path, "graph_data.csv")
+            # save_graphs_to_excel(result_graphs, excel_path)
+            save_graphs_to_excel(result_graphs, excel_path, append=True)
+            with open(results_path, "w") as f:
+                json.dump(experiment_details, f)
+
         if val_acc_list != []:
             mean = np.mean(val_acc_list)
             std = np.std(val_acc_list)
-
             print(f"平均准确率: {mean:.4f} ± {std:.4f}")
+
 if __name__ == "__main__":
     train()

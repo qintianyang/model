@@ -301,11 +301,11 @@ class ClassifierTrainer:
                     correct = (predicted == target).sum().item()
                     net_correct += correct
 
-                    # 水印损失
-                    # trigger_features = model.feature_extractor(data)
+                    
                     loss_collapse = collapse_criterion(trigger_features, class_means, target)
-
                     loss = loss_cls + 0.1 * loss_collapse  # 权重可调
+                    
+                    # loss = loss_cls   # 权重可调
                     # l2_reg = torch.tensor(0.).to(self.device)
                     # for param in self.model.parameters():
                     #     l2_reg += torch.sum(param**2)
